@@ -1,0 +1,11 @@
+# Data files (too large for GitHub)
+data/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Environment
+.env
+venv/

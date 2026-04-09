@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>추천 알고리즘, 정말 효과가 있을까?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --accent: #f59e0b;
+    --accent-light: #fef3c7;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-600: #4b5563;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    color: var(--gray-800);
+    background: var(--gray-50);
+    line-height: 1.8;
+    font-size: 16px;
+  }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #7c3aed 100%);
+    color: white;
+    padding: 80px 20px 60px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 12px;
+    letter-spacing: -1px;
+  }
+  .hero .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    font-weight: 300;
+    max-width: 600px;
+    margin: 0 auto 30px;
+  }
+  .hero-stat {
+    display: inline-flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .hero-stat-item {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px 30px;
+    min-width: 200px;
+  }
+  .hero-stat-item .number {
+    font-size: 2.2rem;
+    font-weight: 900;
+  }
+  .hero-stat-item .label {
+    font-size: 0.85rem;
+    opacity: 0.8;
+  }
+
+  /* Layout */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* TOC */
+  .toc {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin: -30px auto 40px;
+    position: relative;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    max-width: 900px;
+  }
+  .toc h2 {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+    color: var(--gray-600);
+  }
+  .toc ol {
+    columns: 2;
+    column-gap: 24px;
+    padding-left: 20px;
+  }
+  .toc li {
+    margin-bottom: 8px;
+    break-inside: avoid;
+  }
+  .toc a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .toc a:hover { text-decoration: underline; }
+
+  /* Section */
+  section {
+    background: white;
+    border-radius: 16px;
+    padding: 40px 36px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+  }
+  section h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  section h2 .step-badge {
+    background: var(--primary);
+    color: white;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  section h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 28px 0 12px;
+    color: var(--gray-800);
+    border-left: 4px solid var(--primary);
+    padding-left: 12px;
+  }
+  section p {
+    margin-bottom: 14px;
+    color: var(--gray-600);
+  }
+
+  /* Callout */
+  .callout {
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 18px 0;
+    font-size: 0.95rem;
+  }
+  .callout-blue {
+    background: var(--primary-light);
+    border-left: 4px solid var(--primary);
+  }
+  .callout-yellow {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+  }
+  .callout-red {
+    background: var(--danger-light);
+    border-left: 4px solid var(--danger);
+  }
+  .callout-green {
+    background: var(--success-light);
+    border-left: 4px solid var(--success);
+  }
+  .callout strong { color: var(--gray-900); }
+  .callout p { color: var(--gray-800); margin-bottom: 6px; }
+
+  /* Quote */
+  .big-quote {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    text-align: center;
+    padding: 24px;
+    margin: 20px 0;
+    background: linear-gradient(135deg, var(--primary-light), #ede9fe);
+    border-radius: 12px;
+    line-height: 1.6;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.92rem;
+  }
+  thead th {
+    background: var(--gray-100);
+    color: var(--gray-800);
+    font-weight: 600;
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--gray-600);
+  }
+  tbody tr:hover { background: var(--gray-50); }
+  .num-highlight {
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .num-danger {
+    font-weight: 700;
+    color: var(--danger);
+  }
+  .num-success {
+    font-weight: 700;
+    color: var(--success);
+  }
+
+  /* Flow chart */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+  }
+  .flow-step {
+    background: white;
+    border: 2px solid var(--primary);
+    border-radius: 12px;
+    padding: 14px 24px;
+    min-width: 320px;
+    text-align: center;
+    font-weight: 500;
+    position: relative;
+  }
+  .flow-step .num { color: var(--primary); font-weight: 700; }
+  .flow-arrow {
+    width: 2px;
+    height: 24px;
+    background: var(--primary);
+    position: relative;
+  }
+  .flow-arrow::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -5px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--primary);
+  }
+
+  /* Figure */
+  .figure-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .figure-single {
+    margin: 20px 0;
+    text-align: center;
+  }
+  .figure-card {
+    background: var(--gray-50);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+  }
+  .figure-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .figure-card figcaption {
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--gray-600);
+    font-weight: 500;
+    text-align: center;
+  }
+
+  /* 4-grid for uplift */
+  .grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .grid-card {
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+  }
+  .grid-card .pct { font-size: 1.6rem; font-weight: 900; }
+  .grid-card .name { font-size: 0.95rem; font-weight: 700; margin: 4px 0; }
+  .grid-card .desc { font-size: 0.82rem; opacity: 0.8; }
+
+  /* Verdict */
+  .verdict {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .verdict-card {
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+  }
+  .verdict-card h4 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .verdict-card .msg {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  /* Glossary */
+  .glossary-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0;
+    font-size: 0.9rem;
+  }
+  .glossary-term {
+    font-weight: 700;
+    color: var(--gray-900);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .glossary-def {
+    color: var(--gray-600);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray-600);
+    font-size: 0.85rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 1.6rem; }
+    .hero-stat { gap: 12px; }
+    .hero-stat-item { min-width: 140px; padding: 14px 18px; }
+    .hero-stat-item .number { font-size: 1.6rem; }
+    section { padding: 24px 20px; }
+    .toc ol { columns: 1; }
+    .figure-group { grid-template-columns: 1fr; }
+    .grid-4 { grid-template-columns: 1fr; }
+    .verdict { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <h1>추천 알고리즘, 정말 효과가 있을까?</h1>
+  <p class="subtitle">숏폼 영상 플랫폼의 추천 시스템을 데이터로 해부한 프로젝트</p>
+  <div class="hero-stat">
+    <div class="hero-stat-item">
+      <div class="number">+153%</div>
+      <div class="label">클릭률 상승</div>
+    </div>
+    <div class="hero-stat-item">
+      <div class="number">92.4%</div>
+      <div class="label">유저의 다양성 감소</div>
+    </div>
+    <div class="hero-stat-item">
+      <div class="number">148만건</div>
+      <div class="label">분석 데이터</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOC ============ -->
+<div class="container">
+<nav class="toc">
+  <h2>목차</h2>
+  <ol>
+    <li><a href="#sec1">이 프로젝트가 뭔가요?</a></li>
+    <li><a href="#sec2">어떤 데이터를 썼나요?</a></li>
+    <li><a href="#sec3">분석 순서 한눈에 보기</a></li>
+    <li><a href="#sec4">데이터 탐색 — 일단 눈으로 보자</a></li>
+    <li><a href="#sec5">A/B 테스트 — 추천 vs 랜덤</a></li>
+    <li><a href="#sec6">인과추론 — "정말 추천 때문에" 맞아?</a></li>
+    <li><a href="#sec7">오프라인 평가 — 실험 없이 미리 테스트</a></li>
+    <li><a href="#sec8">필터버블 — 추천이 세상을 좁힌다</a></li>
+    <li><a href="#sec9">한 줄 결론</a></li>
+    <li><a href="#sec10">비즈니스 제안</a></li>
+    <li><a href="#sec11">분석 한계</a></li>
+    <li><a href="#sec12">용어 사전</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1. 프로젝트 소개 ============ -->
+<section id="sec1">
+  <h2>이 프로젝트가 뭔가요?</h2>
+  <p>유튜브, 틱톡, 인스타 릴스… 우리가 매일 보는 영상의 대부분은 <strong>추천 알고리즘</strong>이 골라준 것입니다.</p>
+  <p>그런데 이런 의문이 들 수 있어요:</p>
+
+  <div class="callout callout-yellow">
+    <p>"추천 알고리즘이 정말 효과가 있는 걸까?"</p>
+    <p>"혹시 내가 보고 싶은 것만 보여줘서 세상이 좁아지는 건 아닐까?"</p>
+  </div>
+
+  <p>이 프로젝트는 중국의 숏폼 영상 플랫폼 <strong>Kuaishou(쾌수)</strong>의 실제 데이터를 가지고, 이 두 가지 질문에 <strong>숫자로</strong> 답합니다.</p>
+
+  <div class="big-quote">
+    추천 알고리즘은 클릭률을 <span style="color:var(--primary)">153%</span> 올리지만,<br>
+    전체 유저의 <span style="color:var(--danger)">92.4%</span>에서 콘텐츠 다양성을 떨어뜨린다.
+  </div>
+
+  <p style="text-align:center; font-weight:600; color:var(--gray-900);">쉽게 말하면: <strong>"효과는 확실하지만, 부작용도 확실하다."</strong></p>
+</section>
+
+<!-- ============ 2. 데이터 ============ -->
+<section id="sec2">
+  <h2>어떤 데이터를 썼나요?</h2>
+  <p>두 종류의 데이터를 사용했습니다.</p>
+
+  <h3>데이터 1: KuaiRand-Pure — "실험 기록"</h3>
+  <table>
+    <thead><tr><th>구분</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>뭔가요?</td><td>같은 유저에게 <strong>랜덤 영상</strong>도 보여주고, <strong>추천 영상</strong>도 보여준 실험 기록</td></tr>
+      <tr><td>왜 중요?</td><td>같은 사람이 양쪽을 다 경험했으니 <strong>공정한 비교</strong>가 가능</td></tr>
+      <tr><td>규모</td><td>약 <span class="num-highlight">2.7만 명</span> 유저, 약 <span class="num-highlight">148만 건</span>의 시청 기록</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-blue">
+    <p><strong>비유:</strong> 같은 사람에게 A식당(랜덤)과 B식당(추천)을 번갈아 보내고,<br>
+    어디서 더 오래 먹고, 더 자주 재방문하는지 비교한 것과 같습니다.</p>
+  </div>
+
+  <h3>데이터 2: KuaiRec 2.0 — "정답지"</h3>
+  <table>
+    <thead><tr><th>구분</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td>뭔가요?</td><td>1,411명 유저 × 3,327개 영상의 <strong>거의 모든 조합(99.6%)</strong>에 대한 시청 기록</td></tr>
+      <tr><td>왜 중요?</td><td>보통은 유저가 본 영상만 기록이 남지만, 여기선 <strong>안 본 영상의 반응도</strong> 알 수 있음</td></tr>
+      <tr><td>규모</td><td>총 <span class="num-highlight">467만 건</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-blue">
+    <p><strong>비유:</strong> 보통 시험은 푼 문제만 채점하지만, 이 데이터는 <strong>모든 문제의 정답</strong>을 알고 있는 것.<br>
+    덕분에 "이 유저가 이 영상을 봤다면 좋아했을까?"를 확인할 수 있습니다.</p>
+  </div>
+</section>
+
+<!-- ============ 3. 분석 순서 ============ -->
+<section id="sec3">
+  <h2>분석 순서 한눈에 보기</h2>
+  <div class="flow">
+    <div class="flow-step"><span class="num">①</span> 데이터 탐색 — 데이터가 어떻게 생겼는지 파악</div>
+    <div class="flow-arrow"></div>
+    <div class="flow-step"><span class="num">②</span> A/B 테스트 — 추천이 효과가 있는지 <strong>"비교"</strong></div>
+    <div class="flow-arrow"></div>
+    <div class="flow-step"><span class="num">③</span> 인과추론 — 정말 추천 때문인지 <strong>"증명"</strong></div>
+    <div class="flow-arrow"></div>
+    <div class="flow-step"><span class="num">④</span> 오프라인 평가 — 새 알고리즘을 미리 <strong>"예측"</strong></div>
+    <div class="flow-arrow"></div>
+    <div class="flow-step"><span class="num">⑤</span> 필터버블 분석 — 추천의 <strong>"부작용"</strong> 측정</div>
+    <div class="flow-arrow"></div>
+    <div class="flow-step"><span class="num">⑥</span> 종합 리포트 — 비즈니스 제안으로 정리</div>
+  </div>
+  <p style="text-align:center; color:var(--gray-600);">각 단계를 하나씩 풀어보겠습니다.</p>
+</section>
+
+<!-- ============ 4. EDA ============ -->
+<section id="sec4">
+  <h2><span class="step-badge">Step 1</span> 데이터 탐색 — 일단 눈으로 보자</h2>
+  <p>분석 전에 데이터의 전체 모습을 파악한 단계입니다.</p>
+
+  <p><strong>확인한 것들:</strong></p>
+  <ul style="color:var(--gray-600); padding-left:20px; margin-bottom:16px;">
+    <li>유저가 영상에 보이는 반응은 12가지 (클릭, 좋아요, 싫어요, 댓글, 팔로우, 공유 등)</li>
+    <li>유저마다 활동량이 천차만별 (하루 1개 보는 사람 vs 100개 보는 사람)</li>
+    <li>추천 영상은 랜덤 영상보다 모든 참여 지표가 높음</li>
+  </ul>
+
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/01_feedback_comparison.png" alt="피드백 비교">
+      <figcaption>랜덤 vs 추천: 12개 피드백 지표 비교</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/01_user_features.png" alt="유저 특성">
+      <figcaption>유저 특성 분포 (활동량, 가입일 등)</figcaption>
+    </figure>
+  </div>
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/01_daily_trend.png" alt="일별 트렌드">
+      <figcaption>일별 시청 트렌드</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/01_kuairec_watch_ratio.png" alt="시청 비율">
+      <figcaption>KuaiRec 시청 비율 분포</figcaption>
+    </figure>
+  </div>
+
+  <div class="callout callout-yellow">
+    <p><strong>왜 이걸 하나요?</strong><br>
+    요리 전에 재료를 확인하는 것과 같습니다.
+    데이터에 빈 값은 없는지, 이상한 값은 없는지, 전체적인 패턴은 어떤지 먼저 봐야
+    나중에 분석이 엉뚱한 방향으로 가지 않습니다.</p>
+  </div>
+</section>
+
+<!-- ============ 5. A/B Test ============ -->
+<section id="sec5">
+  <h2><span class="step-badge">Step 2</span> A/B 테스트 — 추천 vs 랜덤, 뭐가 나아?</h2>
+
+  <h3>질문: 추천 ON vs OFF, 유저 반응이 달라질까?</h3>
+
+  <div class="callout callout-blue">
+    <p><strong>A/B 테스트란?</strong><br>
+    두 그룹을 만들어서 하나(A)에는 기존 방식, 다른 하나(B)에는 새 방식을 적용한 뒤 결과를 비교하는 실험.<br>
+    신약 임상시험에서 <strong>진짜 약 vs 위약(플라시보)</strong>을 비교하는 것과 같은 원리입니다.</p>
+  </div>
+
+  <h3>결과</h3>
+  <table>
+    <thead>
+      <tr><th>지표</th><th>랜덤 노출</th><th>추천 노출</th><th>변화</th><th>해석</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>클릭률(CTR)</strong></td><td>17.6%</td><td>44.5%</td><td class="num-highlight">+153%</td><td>추천 영상을 2.5배 더 많이 클릭</td></tr>
+      <tr><td><strong>좋아요</strong></td><td>0.5%</td><td>1.8%</td><td class="num-highlight">+269%</td><td>좋아요를 3.7배 더 많이 누름</td></tr>
+      <tr><td><strong>팔로우</strong></td><td>0.03%</td><td>0.13%</td><td class="num-highlight">+410%</td><td>크리에이터 팔로우가 5배 증가</td></tr>
+      <tr><td><strong>댓글</strong></td><td>0.03%</td><td>0.25%</td><td class="num-highlight">+610%</td><td>댓글 작성이 7배 증가</td></tr>
+      <tr><td><strong>싫어요</strong></td><td>0.11%</td><td>0.08%</td><td class="num-success">-32%</td><td>싫어요는 오히려 감소</td></tr>
+    </tbody>
+  </table>
+
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/02_bootstrap_ci.png" alt="Bootstrap 신뢰구간">
+      <figcaption>Bootstrap 신뢰구간 — 추천 효과의 범위 추정</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/02_forest_plot.png" alt="Forest Plot">
+      <figcaption>Forest Plot — 모든 지표에서 유의한 차이</figcaption>
+    </figure>
+  </div>
+
+  <h3>이게 우연이 아니라는 걸 어떻게 알아?</h3>
+
+  <div class="callout callout-yellow">
+    <p><strong>쉽게 설명하면:</strong></p>
+    <p>동전을 10번 던져서 앞면이 7번 나왔다면, "이 동전이 특별한 건지" 아니면 "운이 좋았던 건지" 헷갈리죠.<br>
+    하지만 <strong>10,000번</strong> 던져서 7,000번 앞면이 나왔다면? 이건 운이 아니라 <strong>진짜 뭔가 다른 것</strong>입니다.</p>
+    <p><strong>p-value(피벨류)</strong>가 그 "운일 확률"인데, 이 분석에서는 <code>p &lt; 1e-300</code>.<br>
+    이건 "우연일 확률이 0.000…(0이 300개)…1%"라는 뜻.<br>
+    즉, <strong>100% 확실하게 추천이 효과가 있다</strong>고 볼 수 있습니다.</p>
+  </div>
+
+  <div class="figure-single">
+    <figure class="figure-card" style="max-width:500px; margin:0 auto;">
+      <img src="notebooks/figures/02_segment_lift.png" alt="세그먼트별 효과">
+      <figcaption>유저 세그먼트별 효과 크기 — 중간 활동량 유저에서 최대(+166%)</figcaption>
+    </figure>
+  </div>
+
+  <p><strong>추가 확인 사항:</strong></p>
+  <ul style="color:var(--gray-600); padding-left:20px;">
+    <li><strong>효과 크기(Cohen's d) = 0.578</strong> → "중간~큰 효과" (단순히 유의할 뿐 아니라 실질적으로 의미 있는 차이)</li>
+    <li><strong>SRM 검정</strong>: 실험 설계에 편향이 없었는지 확인 → 문제 없음</li>
+    <li><strong>Power = 100%</strong>: 데이터가 충분해서 작은 차이도 놓치지 않음</li>
+  </ul>
+</section>
+
+<!-- ============ 6. Causal Inference ============ -->
+<section id="sec6">
+  <h2><span class="step-badge">Step 3</span> 인과추론 — "정말 추천 때문에" 좋아진 건 맞아?</h2>
+
+  <h3>왜 A/B 테스트만으로는 부족할까?</h3>
+  <p>A/B 테스트에서 "추천 그룹이 더 좋다"는 걸 확인했지만, 한 가지 의문이 남습니다:</p>
+
+  <div class="callout callout-red">
+    <p>"혹시 추천을 많이 받는 유저가 <strong>원래 활동적인 사람들</strong>이라서 결과가 좋은 게 아닐까?"</p>
+    <p>이런 문제를 <strong>선택 편향(Selection Bias)</strong>이라고 합니다.</p>
+  </div>
+
+  <div class="callout callout-blue">
+    <p><strong>비유:</strong> 헬스장 회원이 비회원보다 건강하다고 해서 "헬스장이 건강하게 만든다"고 단정할 수 없죠.<br>
+    원래 건강에 관심 있는 사람이 헬스장에 가는 것일 수 있으니까요.</p>
+  </div>
+
+  <h3>해결 방법: PSM (Propensity Score Matching)</h3>
+  <p>추천을 받은 유저와 <strong>"비슷한 조건인데 추천을 안 받은 유저"</strong>를 1:1로 짝지어 비교합니다.</p>
+
+  <div class="callout callout-blue">
+    <p><strong>비유:</strong> 키, 몸무게, 나이, 운동 습관이 비슷한 두 사람 중 한 명만 헬스장에 보내고 결과를 비교.<br>
+    이러면 "헬스장 효과"만 깔끔하게 뽑아낼 수 있습니다.</p>
+  </div>
+
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/03_propensity_score.png" alt="Propensity Score">
+      <figcaption>성향점수 분포 — 매칭 전후 비교</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/03_love_plot.png" alt="Love Plot">
+      <figcaption>Love Plot — 매칭 후 모든 변수의 균형 확인 (SMD &lt; 0.1)</figcaption>
+    </figure>
+  </div>
+
+  <div class="big-quote">
+    ATT = 0.263<br>
+    <span style="font-size:0.9rem; font-weight:400;">추천을 받은 유저는, 안 받았을 때보다 클릭률이 <strong>26.3%p</strong> 더 높다.<br>이건 "진짜 추천 때문에" 생긴 효과.</span>
+  </div>
+
+  <h3>유저마다 효과가 다르다 — CATE 분석 (DR-Learner)</h3>
+  <p>모든 유저에게 효과가 똑같을까? 아닙니다.</p>
+
+  <div class="callout callout-blue">
+    <p><strong>DR-Learner란?</strong><br>
+    단순히 모델 예측값으로만 효과를 추정하는 T-Learner와 달리,
+    <strong>실제 관측값으로 모델 오차를 보정</strong>하는 이중강건(Doubly Robust) 방식입니다.<br>
+    "모델이 틀려도 실제 관측값이 보정해준다" → 더 정확한 개인별 효과 추정.</p>
+  </div>
+
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/03_cate_distribution.png" alt="CATE 분포">
+      <figcaption>개인별 추천 효과(CATE) 분포 (DR-Learner) — 99.3%가 양의 효과</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/03_feature_importance.png" alt="변수 중요도">
+      <figcaption>효과 크기에 영향을 주는 요인 — 가입일수(34%)가 최대</figcaption>
+    </figure>
+  </div>
+
+  <h3>Uplift 4분면 — 유저를 4가지 타입으로 분류</h3>
+
+  <div class="grid-4">
+    <div class="grid-card" style="background: #dbeafe; color: #1e40af;">
+      <div class="pct">34.8%</div>
+      <div class="name">Persuadables (설득 가능)</div>
+      <div class="desc">추천 받으면 확 달라지는 유저<br>→ 적극적으로 추천!</div>
+    </div>
+    <div class="grid-card" style="background: #d1fae5; color: #065f46;">
+      <div class="pct">34.7%</div>
+      <div class="name">Sure Things (어차피 봄)</div>
+      <div class="desc">추천 안 해도 알아서 보는 유저<br>→ 새로운 콘텐츠 소개</div>
+    </div>
+    <div class="grid-card" style="background: #fef3c7; color: #92400e;">
+      <div class="pct">15.3%</div>
+      <div class="name">Lost Causes (효과 없음)</div>
+      <div class="desc">추천해도 별 반응 없는 유저<br>→ 다른 종류 콘텐츠 시도</div>
+    </div>
+    <div class="grid-card" style="background: #fee2e2; color: #991b1b;">
+      <div class="pct">15.2%</div>
+      <div class="name">Sleeping Dogs (역효과)</div>
+      <div class="desc">추천하면 오히려 이탈하는 유저<br>→ 추천 빈도 줄이기</div>
+    </div>
+  </div>
+
+  <div class="figure-single">
+    <figure class="figure-card" style="max-width:560px; margin:0 auto;">
+      <img src="notebooks/figures/03_uplift_quadrant.png" alt="Uplift 4분면">
+      <figcaption>Uplift 4분면 시각화</figcaption>
+    </figure>
+  </div>
+
+  <div class="callout callout-green">
+    <p><strong>핵심 인사이트:</strong> 모든 유저에게 같은 강도로 추천하는 건 비효율적.<br>
+    유저 타입에 따라 전략을 다르게 가져가야 합니다.</p>
+  </div>
+</section>
+
+<!-- ============ 7. OPE ============ -->
+<section id="sec7">
+  <h2><span class="step-badge">Step 4</span> 오프라인 정책 평가 — 새 알고리즘을 실험 없이 테스트</h2>
+
+  <h3>문제: 새 알고리즘을 바로 서비스에 올려도 될까?</h3>
+  <p>실제 서비스에 바로 적용하면 안 좋은 알고리즘일 때 유저가 이탈할 수 있고,
+  A/B 테스트를 하려면 시간과 비용이 많이 듭니다.</p>
+  <p>그래서 <strong>이미 있는 데이터로 "미리 시뮬레이션"</strong>하는 기술이 필요합니다.</p>
+
+  <div class="callout callout-blue">
+    <p><strong>비유:</strong> 자동차를 실제 도로에서 테스트하기 전에, <strong>시뮬레이터</strong>에서 먼저 돌려보는 것.</p>
+  </div>
+
+  <h3>어떻게 동작하나? — 핵심 아이디어</h3>
+  <div class="callout callout-yellow">
+    <p><strong>예시:</strong></p>
+    <p>기존 로그: <em>"유저 A가 조회수 기반 추천에서 영상 1, 2, 3을 봤음"</em></p>
+    <p>새 알고리즘에게 질문: <em>"유저 A한테 뭘 추천할 거야?"</em> → <strong>"영상 2, 4, 5 추천"</strong></p>
+    <p>기존 로그에서 확인:</p>
+    <ul style="margin: 8px 0 0 20px;">
+      <li>영상 2는 실제로 봤음 (클릭 1) ✅</li>
+      <li>영상 4는 기존 알고리즘이 안 보여줬으니 모름 → DM/SNIPS로 추정</li>
+      <li>영상 5는 기존 알고리즘이 안 보여줬으니 모름 → DM/SNIPS로 추정</li>
+    </ul>
+    <p style="margin-top:8px;">→ <strong>새 알고리즘 예상 성능 = 추정값</strong></p>
+  </div>
+
+  <h3>3가지 시뮬레이션 방법을 비교</h3>
+  <table>
+    <thead><tr><th>방법</th><th>원리 (쉬운 설명)</th><th>정확도</th></tr></thead>
+    <tbody>
+      <tr><td><strong>DM</strong></td><td>유저 취향을 모델로 학습해서 예측</td><td class="num-success">오차 0.2% (거의 완벽)</td></tr>
+      <tr><td><strong>IPS</strong></td><td>"이 영상이 보여질 확률"로 가중치를 줘서 보정</td><td class="num-danger">오차 92% (너무 부정확)</td></tr>
+      <tr><td><strong>SNIPS</strong></td><td>IPS의 가중치를 안정화시킨 개선 버전</td><td style="color:var(--accent); font-weight:700;">오차 ~10% (실용적)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>테스트한 추천 알고리즘 4가지</h3>
+  <table>
+    <thead><tr><th>알고리즘</th><th>설명</th><th>성능 (정답지 기준)</th></tr></thead>
+    <tbody>
+      <tr><td>Random</td><td>아무거나 보여줌</td><td>4.8%</td></tr>
+      <tr><td>Popular</td><td>인기 영상만 보여줌</td><td>66.2%</td></tr>
+      <tr><td>UserCF</td><td>나와 비슷한 유저가 본 걸 추천</td><td>79.1%</td></tr>
+      <tr><td><strong>Blend</strong></td><td>Popular + UserCF 혼합</td><td class="num-highlight">83.4% (최고)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="figure-single">
+    <figure class="figure-card" style="max-width:600px; margin:0 auto;">
+      <img src="notebooks/figures/04_ope_comparison.png" alt="OPE 비교">
+      <figcaption>OPE 추정값 vs 실제 정답 비교 — DM이 거의 완벽하게 일치</figcaption>
+    </figure>
+  </div>
+
+  <div class="callout callout-green">
+    <p><strong>결론:</strong> 여러 방법을 섞은 Blend가 가장 좋고, DM 방법으로 이걸 <strong>미리 알 수 있었습니다</strong>.<br>
+    실제 서비스 투입 전에 "이 알고리즘 쓸 만한가?"를 데이터로 검증할 수 있다는 뜻.</p>
+  </div>
+</section>
+
+<!-- ============ 8. Filter Bubble ============ -->
+<section id="sec8">
+  <h2><span class="step-badge">Step 5</span> 필터버블 — 추천이 세상을 좁힌다</h2>
+
+  <h3>필터버블이란?</h3>
+  <div class="callout callout-red">
+    <p>추천 알고리즘이 "내가 좋아할 만한 것"만 계속 보여주다 보면,
+    결국 <strong>비슷한 콘텐츠만 반복적으로 보게 되는 현상</strong>.</p>
+    <p>유튜브에서 고양이 영상 하나 봤더니 피드가 전부 고양이로 도배되는 경험, 해보셨죠?</p>
+  </div>
+
+  <h3>어떻게 측정했나?</h3>
+  <p>같은 유저가 <strong>랜덤 추천</strong>을 받았을 때 vs <strong>알고리즘 추천</strong>을 받았을 때
+  얼마나 다양한 영상을 보게 되는지 비교했습니다.</p>
+
+  <table>
+    <thead><tr><th>측정 방법</th><th>랜덤</th><th>추천</th><th>변화</th><th>의미</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Shannon Entropy</strong><br>(다양성 점수)</td>
+        <td>5.147</td><td>4.723</td>
+        <td class="num-danger">-8.2%</td>
+        <td>보는 영상의 종류가 줄었음</td>
+      </tr>
+      <tr>
+        <td><strong>Gini Index</strong><br>(쏠림 정도)</td>
+        <td>0.758</td><td>0.809</td>
+        <td class="num-danger">+6.7%</td>
+        <td>특정 영상에 더 쏠림</td>
+      </tr>
+      <tr>
+        <td><strong>80% 커버리지</strong></td>
+        <td>상위 75% 영상</td><td>상위 23% 영상</td>
+        <td class="num-danger">극단적 편중</td>
+        <td>소수 인기 영상만 추천됨</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-yellow">
+    <p><strong>80% 커버리지가 뭐냐면:</strong><br>
+    "전체 시청의 80%를 채우려면 영상 몇 개가 필요한가?"라는 질문입니다.</p>
+    <p>• <strong>랜덤:</strong> 전체 영상의 75%가 필요 → 다양하게 분산<br>
+    • <strong>추천:</strong> 전체 영상의 23%만으로 충분 → 소수 영상에 극단적으로 집중</p>
+  </div>
+
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/05_diversity_comparison.png" alt="다양성 비교">
+      <figcaption>랜덤 vs 추천: 다양성 지표 비교</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/05_user_entropy.png" alt="유저별 엔트로피">
+      <figcaption>유저별 엔트로피 변화 — 대다수가 하락</figcaption>
+    </figure>
+  </div>
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/05_long_tail.png" alt="Long Tail">
+      <figcaption>Long Tail 분석 — 추천 시 상위 소수 영상에 극단적 집중</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/05_daily_diversity.png" alt="일별 다양성">
+      <figcaption>시간에 따른 다양성 변화 추이</figcaption>
+    </figure>
+  </div>
+
+  <div class="big-quote" style="background: linear-gradient(135deg, #fee2e2, #fef3c7);">
+    전체 유저의 <span style="color:var(--danger)">92.4%</span>에서<br>
+    추천을 받았을 때 콘텐츠 다양성이 감소했다.
+  </div>
+  <p style="text-align:center; color:var(--gray-600);">이건 "일부 유저"가 아니라 <strong>거의 모든 유저</strong>에게 일어나는 구조적 현상입니다.</p>
+</section>
+
+<!-- ============ 9. 결론 ============ -->
+<section id="sec9">
+  <h2>한 줄 결론</h2>
+
+  <div class="verdict">
+    <div class="verdict-card" style="background: var(--primary-light);">
+      <h4 style="color: var(--primary);">좋은 소식</h4>
+      <div class="msg" style="color: var(--primary);">추천은 확실히 효과적이다<br>(클릭률 2.5배)</div>
+      <p style="margin-top:8px; font-size:0.85rem;">비즈니스 지표를 끌어올리는 강력한 도구</p>
+    </div>
+    <div class="verdict-card" style="background: var(--danger-light);">
+      <h4 style="color: var(--danger);">나쁜 소식</h4>
+      <div class="msg" style="color: var(--danger);">거의 모든 유저의 세상을 좁힌다<br>(92.4%)</div>
+      <p style="margin-top:8px; font-size:0.85rem;">장기적으로 유저 피로감, 이탈 위험</p>
+    </div>
+  </div>
+
+  <div class="big-quote">
+    추천 알고리즘은 <strong>강력한 양날의 검</strong>이다.<br>
+    <span style="font-size:0.95rem;">잘 쓰면 참여율을 폭발적으로 올리고,<br>잘못 쓰면 유저를 좁은 세계에 가둔다.</span>
+  </div>
+
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/06_ab_summary.png" alt="A/B 요약">
+      <figcaption>A/B 테스트 종합 요약</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/06_causal_summary.png" alt="인과추론 요약">
+      <figcaption>인과추론 종합 요약</figcaption>
+    </figure>
+  </div>
+  <div class="figure-group">
+    <figure class="figure-card">
+      <img src="notebooks/figures/06_ope_summary.png" alt="OPE 요약">
+      <figcaption>오프라인 평가 종합 요약</figcaption>
+    </figure>
+    <figure class="figure-card">
+      <img src="notebooks/figures/06_filter_bubble_summary.png" alt="필터버블 요약">
+      <figcaption>필터버블 종합 요약</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ 10. 비즈니스 제안 ============ -->
+<section id="sec10">
+  <h2>그래서 비즈니스에 어떻게 쓰나요?</h2>
+
+  <h3>제안 1: 유저 맞춤 추천 강도 조절</h3>
+  <p>아까 유저를 4가지 타입으로 분류했죠? 이걸 실제 서비스에 활용합니다.</p>
+  <table>
+    <thead><tr><th>유저 타입</th><th>비율</th><th>전략</th><th>기대 효과</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Persuadables</strong></td><td>35%</td><td>추천 강화</td><td class="num-highlight">참여율 극대화</td></tr>
+      <tr><td><strong>Sure Things</strong></td><td>35%</td><td>새로운 콘텐츠 소개</td><td class="num-success">다양성 확보</td></tr>
+      <tr><td><strong>Lost Causes</strong></td><td>15%</td><td>다른 카테고리 시도</td><td>이탈 방지</td></tr>
+      <tr><td><strong>Sleeping Dogs</strong></td><td>15%</td><td>추천 빈도 감소</td><td class="num-danger">역효과 방지</td></tr>
+    </tbody>
+  </table>
+
+  <h3>제안 2: 필터버블 방지 장치</h3>
+  <ul style="color:var(--gray-600); padding-left:20px; margin-bottom:16px;">
+    <li><strong>카테고리 쿼터제:</strong> 추천 목록에 최소 N개의 서로 다른 카테고리 포함</li>
+    <li><strong>Long Tail 부스팅:</strong> 인기 영상뿐 아니라 묻힌 좋은 영상도 일정 비율 추천</li>
+    <li><strong>탐색 비율 차등 적용:</strong> 다양성이 낮은 유저에게 랜덤 추천 비율을 높임</li>
+  </ul>
+
+  <h3>제안 3: 새 알고리즘 사전 검증 프로세스</h3>
+  <ul style="color:var(--gray-600); padding-left:20px;">
+    <li>새 추천 로직을 만들면, A/B 테스트 전에 <strong>DM 방식으로 오프라인 시뮬레이션</strong></li>
+    <li>시뮬레이션 통과한 것만 실제 실험 → <strong>비용과 리스크 절감</strong></li>
+    <li>정기적으로 소규모 랜덤 실험을 유지해서 평가 데이터 확보</li>
+  </ul>
+</section>
+
+<!-- ============ 11. 분석 한계 ============ -->
+<section id="sec11">
+  <h2>분석의 한계 — 솔직하게</h2>
+  <p>모든 분석에는 한계가 있습니다. 이 프로젝트의 아쉬운 점을 솔직하게 정리합니다.</p>
+
+  <table>
+    <thead><tr><th>한계</th><th>내용</th><th>개선 방향</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>실험 설계</strong></td>
+        <td>동일 유저가 랜덤/추천을 번갈아 경험 → 앞서 본 영상이 뒤 반응에 영향 가능 (순서 효과)</td>
+        <td>Clustered Standard Error, Mixed Effects Model 적용</td>
+      </tr>
+      <tr>
+        <td><strong>단기 데이터</strong></td>
+        <td>17일간 데이터 → 장기적 필터버블 심화 여부 불확실</td>
+        <td>KuaiRand 전체 4개월 데이터 분석</td>
+      </tr>
+      <tr>
+        <td><strong>태그 익명화</strong></td>
+        <td>영상 카테고리가 숫자 ID만 제공 → "어떤 장르"가 집중되는지 해석 불가</td>
+        <td>실제 서비스 내부 데이터 활용 시 해결 가능</td>
+      </tr>
+      <tr>
+        <td><strong>SHAP 미적용</strong></td>
+        <td>Feature Importance는 변수의 방향(긍정/부정)을 알려주지 않음</td>
+        <td>SHAP 값 추가로 방향까지 명확히 제시</td>
+      </tr>
+      <tr>
+        <td><strong>플랫폼 특수성</strong></td>
+        <td>Kuaishou 숏폼 결과를 유튜브, 넷플릭스 등에 그대로 적용하기 어려움</td>
+        <td>다중 플랫폼 비교 연구</td>
+      </tr>
+      <tr>
+        <td><strong>OPE 샘플</strong></td>
+        <td>200명 샘플로 OPE 수행 → 전체 유저 대비 대표성 한계</td>
+        <td>전체 유저 + Doubly Robust 추정량 추가</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-yellow">
+    <p><strong>그럼에도 불구하고:</strong><br>
+    한계를 인식하면서도 <strong>공개 데이터만으로</strong> EDA → A/B → 인과추론 → OPE → 필터버블까지
+    일관된 파이프라인을 구성했다는 점, 그리고 각 분석이 다음 분석의 근거가 되는
+    <strong>인과적 스토리라인</strong>을 갖췄다는 점에서 의미 있는 프로젝트입니다.</p>
+  </div>
+</section>
+
+<!-- ============ 12. 용어 사전 ============ -->
+<section id="sec12">
+  <h2>용어 사전</h2>
+  <p>분석에서 등장하는 용어들을 일상 언어로 풀어놓았습니다.</p>
+
+  <div class="glossary-grid">
+    <div class="glossary-term">A/B 테스트</div>
+    <div class="glossary-def">두 그룹을 비교하는 실험 (신약 vs 위약 같은 것)</div>
+
+    <div class="glossary-term">p-value</div>
+    <div class="glossary-def">"이 결과가 우연일 확률". 낮을수록 결과가 확실함</div>
+
+    <div class="glossary-term">통계적 유의성</div>
+    <div class="glossary-def">"우연이 아니다"라고 판단할 수 있는 수준 (보통 p < 0.05)</div>
+
+    <div class="glossary-term">Cohen's d</div>
+    <div class="glossary-def">효과의 실질적 크기. 0.2 작음, 0.5 중간, 0.8 큼</div>
+
+    <div class="glossary-term">CTR</div>
+    <div class="glossary-def">Click-Through Rate. 영상을 보여줬을 때 클릭하는 비율</div>
+
+    <div class="glossary-term">PSM</div>
+    <div class="glossary-def">비슷한 조건의 사람끼리 짝지어 비교하는 방법</div>
+
+    <div class="glossary-term">ATT</div>
+    <div class="glossary-def">실제로 추천 받은 사람들에게 나타난 평균 효과</div>
+
+    <div class="glossary-term">CATE</div>
+    <div class="glossary-def">유저 개인별로 추정한 추천 효과 (사람마다 다름)</div>
+
+    <div class="glossary-term">Uplift</div>
+    <div class="glossary-def">"추천했을 때 vs 안 했을 때" 행동 변화량</div>
+
+    <div class="glossary-term">OPE</div>
+    <div class="glossary-def">기존 데이터로 새 알고리즘 성능을 미리 예측하는 기술</div>
+
+    <div class="glossary-term">DM / IPS / SNIPS</div>
+    <div class="glossary-def">OPE의 3가지 계산 방식 (각각 정확도와 안정성이 다름)</div>
+
+    <div class="glossary-term">Shannon Entropy</div>
+    <div class="glossary-def">다양성을 숫자로 나타낸 것. 높을수록 다양함</div>
+
+    <div class="glossary-term">Gini Index</div>
+    <div class="glossary-def">쏠림 정도. 1에 가까울수록 소수에 집중됨</div>
+
+    <div class="glossary-term">필터버블</div>
+    <div class="glossary-def">추천이 비슷한 것만 보여줘서 시야가 좁아지는 현상</div>
+
+    <div class="glossary-term">Long Tail</div>
+    <div class="glossary-def">인기 없지만 가치 있는 콘텐츠들 (전체의 대다수)</div>
+  </div>
+</section>
+
+<!-- ============ Footer ============ -->
+<footer>
+  <p><strong>기술 스택:</strong> Python · scipy · statsmodels · scikit-learn · surprise · econml · causalml · matplotlib · seaborn · plotly</p>
+  <p style="margin-top:8px;"><strong>데이터 출처:</strong>
+    <a href="https://zenodo.org/records/12594951" style="color:var(--primary)">KuaiRec 2.0</a> ·
+    <a href="https://zenodo.org/records/12600781" style="color:var(--primary)">KuaiRand-Pure</a> ·
+    Gao et al. (2022) CIKM
+  </p>
+  <p style="margin-top:16px; color:#aaa;">데이터 애널리스트 포트폴리오 · 2026년 3월</p>
+</footer>
+
+</div><!-- /container -->
+
+</body>
+</html>
